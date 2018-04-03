@@ -1,0 +1,88 @@
+---
+- name: Run docker postgres
+  hosts: localhost
+
+  tasks:
+  - name: Get user
+    uri:
+      url: http://localhost:8080/v1/student/1
+      method: GET
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+    register: user_data
+
+  - name: Get courses
+    uri:
+      url: http://localhost:8080/v1/course/all
+      method: GET
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+    register: courses_data
+
+  - name: Check if user name == Nejc
+    debug:
+      msg: "ERROR - user 1 should be Nejc. JSON: {{user_data.json}}"
+    when: user_data.json["name"] != "Nejc"
+
+  - name: Check if course name == Programiranje 1
+    debug:
+      msg: "ERROR - first course should be Programiranje 1. JSON: {{courses_data.json}}"
+    when: courses_data.json[0]["name"] != "Programiranje 1"
+
+  - name: Try to enroll
+    uri:
+      url: http://localhost:8080/v1/student/1/enrolled/1
+      method: PUT
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+
+  - name: See if enrolled
+    uri:
+      url: http://localhost:8080/v1/student/1/enrolled
+      method: GET
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+    register: enrolled_data
+
+  - name: Check if user 1 is enrolled to course 1
+    debug:
+      msg: "ERROR - user 1 should be enrolled to course 1. JSON: {{ enrolled_data.json }}"
+    when: enrolled_data.json[0]["id"] != 1
+
+  - name: Un-enroll
+    uri:
+      url: http://localhost:8080/v1/student/1/enrolled/1
+      method: DELETE
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+
+  - name: See if enrolled
+    uri:
+      url: http://localhost:8080/v1/student/1/enrolled
+      method: GET
+      user: Nejc
+      password: f6Zd1FDHTD9W1rF7P3TmmSbyGxB0cN
+      return_content: yes
+      body_format: json
+      status_code: 200
+    register: enrolled_data_delete
+
+  - name: Check if user 1 is still enrolled to course 1
+    debug:
+      msg: "ERROR - user 1 should NOT be enrolled to course 1 after delete. JSON: {{ enrolled_data_delete.json }}"
+    when: enrolled_data.json["id"] is defined

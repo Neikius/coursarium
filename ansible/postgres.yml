@@ -1,0 +1,20 @@
+---
+- name: Run docker postgres
+  hosts: localhost
+
+  tasks:
+  - name: Install postgres
+    docker_container:
+      name: coursarium-postgres
+      image: postgres:9.6
+      state: started
+      restart: yes
+      restart_policy: unless-stopped
+      volumes:
+      - 'coursarium-postgres-volume:/var/lib/postgresql/data'
+      ports:
+      - "15432:5432"
+      env:
+        POSTGRES_PASSWORD: coursarium
+        POSTGRES_USER: coursarium
+        POSTGRES_DB: coursarium
